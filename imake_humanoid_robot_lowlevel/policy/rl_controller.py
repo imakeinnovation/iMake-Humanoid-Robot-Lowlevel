@@ -1,10 +1,10 @@
-# Copyright (c) 2025, The Berkeley Humanoid Lite Project Developers.
+# Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
 """
 RL Controller
 
 This module implements a policy runner that executes trained policies (PyTorch or ONNX)
-for controlling the Berkeley Humanoid Lite robot. It handles UDP communication for
+for controlling the iMake Humanoid Robot. It handles UDP communication for
 receiving observations and sending actions to the robot.
 """
 
@@ -69,7 +69,7 @@ class OnnxPolicy(Policy):
 
 class RlController:
     """
-    A class to run trained policies for the Berkeley Humanoid Lite robot.
+    A class to run trained policies for the iMake Humanoid Robot.
 
     This class handles the execution of trained policies (PyTorch or ONNX format),
     processes robot observations, and sends control commands via UDP communication.

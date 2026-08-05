@@ -1,13 +1,13 @@
-# Copyright (c) 2025, The Berkeley Humanoid Lite Project Developers.
+# Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
 import time
 
 from omegaconf import OmegaConf
 import numpy as np
 
-import berkeley_humanoid_lite_lowlevel.recoil as recoil
-from berkeley_humanoid_lite_lowlevel.robot.imu import SerialImu, Baudrate
-from berkeley_humanoid_lite_lowlevel.policy.gamepad import Se2Gamepad
+import imake_humanoid_robot_lowlevel.recoil as recoil
+from imake_humanoid_robot_lowlevel.robot.imu import SerialImu, Baudrate
+from imake_humanoid_robot_lowlevel.policy.gamepad import Se2Gamepad
 
 
 class State:

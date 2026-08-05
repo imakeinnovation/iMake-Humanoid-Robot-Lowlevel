@@ -1,4 +1,4 @@
-// Copyright (c) 2025, The Berkeley Humanoid Lite Project Developers.
+// Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
 #include <stdint.h>
 #include <stdio.h>

@@ -5,7 +5,7 @@ from typing import Union
 import numpy as np
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
-from berkeley_humanoid_lite_lowlevel.policy.rl_controller import RlController
+from imake_humanoid_robot_lowlevel.policy.rl_controller import RlController
 
 
 def parse_arguments() -> Union[DictConfig, ListConfig]:
@@ -15,7 +15,7 @@ def parse_arguments() -> Union[DictConfig, ListConfig]:
     Returns:
         Union[DictConfig, ListConfig]: Loaded configuration object
     """
-    parser = argparse.ArgumentParser(description="Policy Runner for Berkeley Humanoid Lite")
+    parser = argparse.ArgumentParser(description="Policy Runner for iMake Humanoid Robot")
     parser.add_argument("--config", type=str, default="./configs/policy_humanoid.yaml",
                        help="Path to the configuration file")
     args = parser.parse_args()
