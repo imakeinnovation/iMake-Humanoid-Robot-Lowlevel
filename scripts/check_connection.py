@@ -1,6 +1,6 @@
-# Copyright (c) 2025, The Berkeley Humanoid Lite Project Developers.
+# Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
-from berkeley_humanoid_lite_lowlevel.robot import Humanoid
+from imake_humanoid_robot_lowlevel.robot import Humanoid
 
 
 robot = Humanoid()

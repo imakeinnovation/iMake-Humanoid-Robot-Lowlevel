@@ -1,6 +1,6 @@
-# Copyright (c) 2025, The Berkeley Humanoid Lite Project Developers.
+# Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
-import berkeley_humanoid_lite_lowlevel.recoil as recoil
+import imake_humanoid_robot_lowlevel.recoil as recoil
 
 
 args = recoil.util.get_args()

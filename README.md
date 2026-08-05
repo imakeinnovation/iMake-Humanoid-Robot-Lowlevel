@@ -1,6 +1,6 @@
-# Berkeley Humanoid Lite Low-level Control
+# iMake Humanoid Robot Low-level Control
 
-This submodule repository contains the low-level control code for the Berkeley Humanoid Lite robot.
+This submodule repository contains the low-level control code for the iMake Humanoid Robot.
 
 
 ## Installation
@@ -30,7 +30,7 @@ sudo ./scripts/start_can_transports.sh
 A Python script is provided to verify the CAN connection to all the joints of the robot:
 
 ```bash
-python3 ./berkeley_humanoid_lite_lowlevel/robot/check_connection.py
+python3 ./imake_humanoid_robot_lowlevel/robot/check_connection.py
 ```
 
 ### Launch the joystick receiver
@@ -40,7 +40,7 @@ The low-level computer also receives commands from the joystick.
 To broadcast the joystick commands to other running nodes, run the following command:
 
 ```bash
-python ./berkeley_humanoid_lite_lowlevel/policy/udp_joystick.py
+python ./imake_humanoid_robot_lowlevel/policy/udp_joystick.py
 ```
 
 ### Joint Calibration
@@ -50,7 +50,7 @@ Because the joint actuators only have single encoder on the motor shaft, we need
 Run the following command to start the calibration:
 
 ```bash
-python3 ./berkeley_humanoid_lite_lowlevel/robot/calibrate_joints.py
+python3 ./imake_humanoid_robot_lowlevel/robot/calibrate_joints.py
 ```
 
 After the script is launched and running, manually move the robot joints to the mechanical position limits. After all the joints are moved, press `q` or the `B` button on the joystick to quit the calibration.

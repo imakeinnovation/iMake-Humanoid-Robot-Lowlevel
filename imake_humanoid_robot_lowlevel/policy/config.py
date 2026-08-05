@@ -52,7 +52,7 @@ class Cfg(DictConfig):
         Returns:
             DictConfig | ListConfig: Loaded configuration object
         """
-        parser = argparse.ArgumentParser(description="Policy Runner for Berkeley Humanoid Lite")
+        parser = argparse.ArgumentParser(description="Policy Runner for iMake Humanoid Robot")
         parser.add_argument(
             "--config",
             type=str,

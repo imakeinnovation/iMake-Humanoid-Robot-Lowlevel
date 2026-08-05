@@ -3,15 +3,15 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "berkeley_humanoid_lite_lowlevel"
+name = "imake_humanoid_robot_lowlevel"
 version = "2025.09.07"
-description = "Low-level control for Berkeley Humanoid Lite"
+description = "Low-level control for iMake Humanoid Robot"
 authors = [
-    { name = "Berkeley Humanoid Project Developers" },
+    { name = "iMake Humanoid Robot Project Developers" },
     { name = "-T.K.-" },
 ]
 maintainers = [
-    { name = "Berkeley Humanoid Project Developers" },
+    { name = "iMake Humanoid Robot Project Developers" },
     { name = "-T.K.-" },
 ]
 readme = "README.md"
@@ -27,8 +27,8 @@ dependencies = [
 ]
 
 [project.urls]
-repository = "https://github.com/HybridRobotics/Berkeley-Humanoid-Lite-Lowlevel"
+repository = "https://github.com/imakeinnovation/iMake-Humanoid-Robot-Lowlevel"
 
 [tool.setuptools]
-packages = ["berkeley_humanoid_lite_lowlevel"]
+packages = ["imake_humanoid_robot_lowlevel"]
 zip-safe = false

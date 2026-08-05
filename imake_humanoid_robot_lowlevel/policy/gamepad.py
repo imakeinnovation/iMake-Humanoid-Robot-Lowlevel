@@ -1,9 +1,9 @@
-# Copyright (c) 2025, The Berkeley Humanoid Lite Project Developers.
+# Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
 """
-Gamepad Controller Module for Berkeley Humanoid Lite
+Gamepad Controller Module for iMake Humanoid Robot
 
-This module implements UDP-based controllers for the Berkeley Humanoid Lite robot,
+This module implements UDP-based controllers for the iMake Humanoid Robot,
 supporting both gamepad and keyboard input devices. It handles command broadcasting
 over UDP for robot control modes and movement velocities.
 """

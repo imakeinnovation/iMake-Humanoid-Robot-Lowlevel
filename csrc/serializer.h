@@ -1,4 +1,4 @@
-// Copyright (c) 2025, The Berkeley Humanoid Lite Project Developers.
+// Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
 #ifndef SERIALIZER_H
 #define SERIALIZER_H

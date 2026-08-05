@@ -1,11 +1,11 @@
-# Copyright (c) 2025, The Berkeley Humanoid Lite Project Developers.
+# Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
 from cc.udp import UDP
 from loop_rate_limiters import RateLimiter
 
-from berkeley_humanoid_lite_lowlevel.robot import Humanoid
-from berkeley_humanoid_lite_lowlevel.policy.rl_controller import RlController
-from berkeley_humanoid_lite_lowlevel.policy.config import Cfg
+from imake_humanoid_robot_lowlevel.robot import Humanoid
+from imake_humanoid_robot_lowlevel.policy.rl_controller import RlController
+from imake_humanoid_robot_lowlevel.policy.config import Cfg
 
 
 # Load configuration
