@@ -54,6 +54,15 @@ class Se2Gamepad:
         self._stopped = threading.Event()
         self._run_forever_thread = None
 
+        # Tracks the largest raw magnitude seen on each axis so far, used to
+        # self-calibrate the normalization range instead of assuming a fixed
+        # 16-bit (Xbox/XInput) range that generic controllers don't follow.
+        self._axis_scale = {
+            XInputEntry.AXIS_Y_L: 1.0,
+            XInputEntry.AXIS_X_R: 1.0,
+            XInputEntry.AXIS_X_L: 1.0,
+        }
+
         self.reset()
 
         self.commands = {
@@ -88,17 +97,25 @@ class Se2Gamepad:
 
         self._update_command_buffer()
 
+    def _normalize_axis(self, code: str, raw: int) -> float:
+        """Normalize a raw axis reading to [-1, 1] using the largest magnitude seen so far."""
+        self._axis_scale[code] = max(self._axis_scale[code], abs(raw))
+        value = -raw / self._axis_scale[code] * self.stick_sensitivity
+        if abs(value) < self.dead_zone:
+            value = 0.0
+        return max(-1.0, min(1.0, value))
+
     def _update_command_buffer(self) -> Dict[str, float]:
         velocity_x = self._states.get(XInputEntry.AXIS_Y_L)
         velocity_y = self._states.get(XInputEntry.AXIS_X_R)
         velocity_yaw = self._states.get(XInputEntry.AXIS_X_L)
 
         if velocity_x is not None:
-            self.commands["velocity_x"] = velocity_x / -32768.0
+            self.commands["velocity_x"] = self._normalize_axis(XInputEntry.AXIS_Y_L, velocity_x)
         if velocity_y is not None:
-            self.commands["velocity_y"] = velocity_y / -32768.0
+            self.commands["velocity_y"] = self._normalize_axis(XInputEntry.AXIS_X_R, velocity_y)
         if velocity_yaw is not None:
-            self.commands["velocity_yaw"] = velocity_yaw / -32768.0
+            self.commands["velocity_yaw"] = self._normalize_axis(XInputEntry.AXIS_X_L, velocity_yaw)
 
         mode_switch = 0
 
