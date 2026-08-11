@@ -9,6 +9,7 @@ over UDP for robot control modes and movement velocities.
 """
 
 import threading
+import time
 from typing import Dict
 
 from inputs import get_gamepad
@@ -209,10 +210,24 @@ if __name__ == "__main__":
     command_controller = Se2Gamepad()
     command_controller.run()
 
+    axis_labels = [
+        (XInputEntry.AXIS_Y_L, "Y_L(fwd/back)"),
+        (XInputEntry.AXIS_X_L, "X_L(yaw)     "),
+        (XInputEntry.AXIS_X_R, "X_R(strafe)  "),
+    ]
+
     try:
         while True:
-            print(f"""{command_controller.commands.get("velocity_x"):.2f}, {command_controller.commands.get("velocity_y"):.2f}, {command_controller.commands.get("velocity_yaw"):.2f}""")
-            pass
+            for code, label in axis_labels:
+                raw = command_controller._states.get(code)
+                center = command_controller._axis_center[code]
+                scale_pos = command_controller._axis_scale_pos[code]
+                scale_neg = command_controller._axis_scale_neg[code]
+                center_str = f"{center:.1f}" if center is not None else "calibrating"
+                print(f"  {label}  raw={raw:>6}  center={center_str:>11}  scale_pos={scale_pos:>7.1f}  scale_neg={scale_neg:>7.1f}")
+            print(f"""  commands: x={command_controller.commands.get("velocity_x"):.2f}  y={command_controller.commands.get("velocity_y"):.2f}  yaw={command_controller.commands.get("velocity_yaw"):.2f}""")
+            print("-" * 70)
+            time.sleep(0.2)
     except KeyboardInterrupt:
         print("Keyboard interrupt")
 
