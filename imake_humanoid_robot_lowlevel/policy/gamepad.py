@@ -44,9 +44,13 @@ class XInputEntry:
 
 
 class Se2Gamepad:
+    # Number of raw readings to average per axis, at startup, to determine
+    # its idle/rest value before any scale calibration or command output.
+    _CENTER_CALIBRATION_SAMPLES = 20
+
     def __init__(self,
                  stick_sensitivity: float = 1.0,
-                 dead_zone: float = 0.01,
+                 dead_zone: float = 0.05,
                  ) -> None:
         self.stick_sensitivity = stick_sensitivity
         self.dead_zone = dead_zone
@@ -54,13 +58,31 @@ class Se2Gamepad:
         self._stopped = threading.Event()
         self._run_forever_thread = None
 
-        # Tracks the largest raw magnitude seen on each axis so far, used to
-        # self-calibrate the normalization range instead of assuming a fixed
-        # 16-bit (Xbox/XInput) range that generic controllers don't follow.
+        # Tracks the largest raw deviation from center seen on each axis so
+        # far, used to self-calibrate the normalization range instead of
+        # assuming a fixed 16-bit (Xbox/XInput) range that generic
+        # controllers don't follow.
         self._axis_scale = {
             XInputEntry.AXIS_Y_L: 1.0,
             XInputEntry.AXIS_X_R: 1.0,
             XInputEntry.AXIS_X_L: 1.0,
+        }
+
+        # Each axis's idle/rest raw value, set once from the first
+        # _CENTER_CALIBRATION_SAMPLES readings (None until then). Generic
+        # pads often don't rest at exactly 0, and that offset gets amplified
+        # once _axis_scale calibrates down to a small real range, producing
+        # phantom nonzero commands at rest. Assumes the stick is untouched
+        # for the first moment after the controller connects.
+        self._axis_center = {
+            XInputEntry.AXIS_Y_L: None,
+            XInputEntry.AXIS_X_R: None,
+            XInputEntry.AXIS_X_L: None,
+        }
+        self._axis_center_samples = {
+            XInputEntry.AXIS_Y_L: [],
+            XInputEntry.AXIS_X_R: [],
+            XInputEntry.AXIS_X_L: [],
         }
 
         self.reset()
@@ -98,9 +120,21 @@ class Se2Gamepad:
         self._update_command_buffer()
 
     def _normalize_axis(self, code: str, raw: int) -> float:
-        """Normalize a raw axis reading to [-1, 1] using the largest magnitude seen so far."""
-        self._axis_scale[code] = max(self._axis_scale[code], abs(raw))
-        value = -raw / self._axis_scale[code] * self.stick_sensitivity
+        """Normalize a raw axis reading to [-1, 1], self-calibrating both the
+        idle center (first _CENTER_CALIBRATION_SAMPLES readings) and the
+        max-deflection range (largest deviation from center seen since)."""
+        center = self._axis_center[code]
+        if center is None:
+            samples = self._axis_center_samples[code]
+            samples.append(raw)
+            if len(samples) < self._CENTER_CALIBRATION_SAMPLES:
+                return 0.0
+            center = sum(samples) / len(samples)
+            self._axis_center[code] = center
+
+        deviation = raw - center
+        self._axis_scale[code] = max(self._axis_scale[code], abs(deviation))
+        value = -deviation / self._axis_scale[code] * self.stick_sensitivity
         if abs(value) < self.dead_zone:
             value = 0.0
         return max(-1.0, min(1.0, value))
