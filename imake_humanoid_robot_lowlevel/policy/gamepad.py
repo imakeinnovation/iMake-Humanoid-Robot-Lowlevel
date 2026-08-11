@@ -9,7 +9,6 @@ over UDP for robot control modes and movement velocities.
 """
 
 import threading
-import time
 from typing import Dict
 
 from inputs import get_gamepad
@@ -49,15 +48,6 @@ class Se2Gamepad:
     # its idle/rest value before any scale calibration or command output.
     _CENTER_CALIBRATION_SAMPLES = 20
 
-    # If an axis hasn't produced a fresh reading in this long, its command is
-    # forced back to 0 (see _watchdog_forever). advance() only recomputes
-    # commands when get_gamepad() returns a new event, so a stick that stops
-    # reporting changes for any reason (hysteresis on release, USB dropout,
-    # a stuck pot) would otherwise leave its last nonzero command in effect
-    # forever.
-    _STALE_TIMEOUT_S = 0.3
-    _STALE_CHECK_INTERVAL_S = 0.05
-
     _AXIS_TO_COMMAND = {
         XInputEntry.AXIS_Y_L: "velocity_x",
         XInputEntry.AXIS_X_R: "velocity_y",
@@ -73,7 +63,6 @@ class Se2Gamepad:
 
         self._stopped = threading.Event()
         self._run_forever_thread = None
-        self._watchdog_thread = None
 
         # Tracks the largest raw deviation from center seen on each axis so
         # far, self-calibrating the normalization range instead of assuming
@@ -111,15 +100,6 @@ class Se2Gamepad:
             XInputEntry.AXIS_X_L: [],
         }
 
-        # Last time each axis actually received a new raw event, used by
-        # _watchdog_forever to zero out commands whose axis has gone quiet
-        # instead of holding their last (possibly nonzero) value forever.
-        self._axis_last_update = {
-            XInputEntry.AXIS_Y_L: time.monotonic(),
-            XInputEntry.AXIS_X_R: time.monotonic(),
-            XInputEntry.AXIS_X_L: time.monotonic(),
-        }
-
         self.reset()
 
         self.commands = {
@@ -140,19 +120,10 @@ class Se2Gamepad:
     def run(self) -> None:
         self._run_forever_thread = threading.Thread(target=self.run_forever)
         self._run_forever_thread.start()
-        self._watchdog_thread = threading.Thread(target=self._watchdog_forever, daemon=True)
-        self._watchdog_thread.start()
 
     def run_forever(self) -> None:
         while not self._stopped.is_set():
             self.advance()
-
-    def _watchdog_forever(self) -> None:
-        while not self._stopped.wait(self._STALE_CHECK_INTERVAL_S):
-            now = time.monotonic()
-            for code, command_key in self._AXIS_TO_COMMAND.items():
-                if now - self._axis_last_update[code] > self._STALE_TIMEOUT_S:
-                    self.commands[command_key] = 0.0
 
     def advance(self) -> None:
         events = get_gamepad()
@@ -160,8 +131,6 @@ class Se2Gamepad:
         # update all events from the joystick
         for event in events:
             self._states[event.code] = event.state
-            if event.code in self._axis_last_update:
-                self._axis_last_update[event.code] = time.monotonic()
 
         self._update_command_buffer()
 
@@ -193,18 +162,9 @@ class Se2Gamepad:
         return max(-1.0, min(1.0, value))
 
     def _update_command_buffer(self) -> Dict[str, float]:
-        now = time.monotonic()
         for code, command_key in self._AXIS_TO_COMMAND.items():
             raw = self._states.get(code)
-            if raw is None:
-                continue
-            # An unrelated event (e.g. a different stick moving) also lands
-            # here, so a stale axis must be re-checked on every call rather
-            # than just once in the watchdog: otherwise recomputing from its
-            # old raw value would immediately undo the watchdog's zeroing.
-            if now - self._axis_last_update[code] > self._STALE_TIMEOUT_S:
-                self.commands[command_key] = 0.0
-            else:
+            if raw is not None:
                 self.commands[command_key] = self._normalize_axis(code, raw)
 
         mode_switch = 0
