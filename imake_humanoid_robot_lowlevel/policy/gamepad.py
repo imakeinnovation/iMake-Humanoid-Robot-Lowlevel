@@ -9,6 +9,7 @@ over UDP for robot control modes and movement velocities.
 """
 
 import threading
+import time
 from typing import Dict
 
 from inputs import get_gamepad
@@ -56,7 +57,7 @@ class Se2Gamepad:
 
     def __init__(self,
                  stick_sensitivity: float = 1.0,
-                 dead_zone: float = 0.05,
+                 dead_zone: float = 0.1,
                  ) -> None:
         self.stick_sensitivity = stick_sensitivity
         self.dead_zone = dead_zone
@@ -90,15 +91,19 @@ class Se2Gamepad:
         # phantom nonzero commands at rest. Assumes the stick is untouched
         # for the first moment after the controller connects.
         self._axis_center = {
-            XInputEntry.AXIS_Y_L: None,
-            XInputEntry.AXIS_X_R: None,
-            XInputEntry.AXIS_X_L: None,
+            XInputEntry.AXIS_Y_L: 128,
+            XInputEntry.AXIS_X_R: 128,
+            XInputEntry.AXIS_X_L: 128,
         }
         self._axis_center_samples = {
             XInputEntry.AXIS_Y_L: [],
             XInputEntry.AXIS_X_R: [],
             XInputEntry.AXIS_X_L: [],
         }
+
+        # Edge-detects BTN_BACK to trigger _reset_axis_calibration() once per
+        # press (see _update_command_buffer), not continuously while held.
+        self._recalibrate_button_was_pressed = False
 
         self.reset()
 
@@ -149,19 +154,36 @@ class Se2Gamepad:
             self._axis_center[code] = center
 
         deviation = raw - center
-        if deviation >= 0:
-            self._axis_scale_pos[code] = max(self._axis_scale_pos[code], deviation)
-            scale = self._axis_scale_pos[code]
-        else:
-            self._axis_scale_neg[code] = max(self._axis_scale_neg[code], -deviation)
-            scale = self._axis_scale_neg[code]
+        scale_map = self._axis_scale_pos if deviation >= 0 else self._axis_scale_neg
+        scale_map[code] = max(scale_map[code], abs(deviation))
+        scale = scale_map[code]
 
         value = -deviation / scale * self.stick_sensitivity
         if abs(value) < self.dead_zone:
             value = 0.0
         return max(-1.0, min(1.0, value))
 
+    def _reset_axis_calibration(self) -> None:
+        """Re-run startup center calibration and clear the learned
+        max-deflection range on every axis. A one-off unrepresentative
+        excursion (e.g. one hard, fast swing to correct drift) can otherwise
+        permanently set the ceiling too high for genuine but more moderate
+        pushes afterward; triggered manually (BTN_BACK) rather than an
+        automatic heuristic, since telling a real outlier apart from
+        ordinary input isn't reliably possible from raw readings alone."""
+        print("Gamepad: recalibrating stick center/range, hold sticks at rest...")
+        for code in self._AXIS_TO_COMMAND:
+            self._axis_center[code] = None
+            self._axis_center_samples[code] = []
+            self._axis_scale_pos[code] = 1.0
+            self._axis_scale_neg[code] = 1.0
+
     def _update_command_buffer(self) -> Dict[str, float]:
+        recalibrate_button_pressed = bool(self._states.get(XInputEntry.BTN_BACK))
+        if recalibrate_button_pressed and not self._recalibrate_button_was_pressed:
+            self._reset_axis_calibration()
+        self._recalibrate_button_was_pressed = recalibrate_button_pressed
+
         for code, command_key in self._AXIS_TO_COMMAND.items():
             raw = self._states.get(code)
             if raw is not None:
@@ -188,10 +210,24 @@ if __name__ == "__main__":
     command_controller = Se2Gamepad()
     command_controller.run()
 
+    axis_labels = [
+        (XInputEntry.AXIS_Y_L, "Y_L(fwd/back)"),
+        (XInputEntry.AXIS_X_L, "X_L(yaw)     "),
+        (XInputEntry.AXIS_X_R, "X_R(strafe)  "),
+    ]
+
     try:
         while True:
-            print(f"""{command_controller.commands.get("velocity_x"):.2f}, {command_controller.commands.get("velocity_y"):.2f}, {command_controller.commands.get("velocity_yaw"):.2f}""")
-            pass
+            for code, label in axis_labels:
+                raw = command_controller._states.get(code)
+                center = command_controller._axis_center[code]
+                scale_pos = command_controller._axis_scale_pos[code]
+                scale_neg = command_controller._axis_scale_neg[code]
+                center_str = f"{center:.1f}" if center is not None else "calibrating"
+                print(f"  {label}  raw={raw:>6}  center={center_str:>11}  scale_pos={scale_pos:>7.1f}  scale_neg={scale_neg:>7.1f}")
+            print(f"""  commands: x={command_controller.commands.get("velocity_x"):.2f}  y={command_controller.commands.get("velocity_y"):.2f}  yaw={command_controller.commands.get("velocity_yaw"):.2f}""")
+            print("-" * 70)
+            time.sleep(0.2)
     except KeyboardInterrupt:
         print("Keyboard interrupt")
 
