@@ -1,5 +1,12 @@
 # Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
+from pathlib import Path
+import sys
+
+_ROOT = Path(__file__).resolve().parents[2]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 import imake_humanoid_robot_lowlevel.recoil as recoil
 
 
@@ -76,6 +83,9 @@ def store_to_flash(bus: recoil.Bus, device_id: int):
 
 # configure_torque_limit(motor, 2)
 
+# CAN PARAM_MOTOR_PHASE_ORDER (0x10C). This is not the Recoil firmware
+# #define MOTOR_PHASE_ORDER. Lab 2026-08-27: writing -1 here did not reverse
+# the first electrical-offset spin. See docs/BRINGUP.md.
 # configure_phase_order(motor, -1)
 
 # pi = math.pi

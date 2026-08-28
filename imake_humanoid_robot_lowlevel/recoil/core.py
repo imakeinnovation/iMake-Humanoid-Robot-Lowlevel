@@ -204,10 +204,36 @@ class Bus:
         self.__bus = can.interface.Bus(interface="socketcan", channel=self.channel, bitrate=self.bitrate)
 
     def __del__(self):
-        self.stop()
+        try:
+            self.stop()
+        except Exception:
+            pass
 
     def stop(self):
-        self.__bus.shutdown()
+        bus = getattr(self, "_Bus__bus", None)
+        if bus is None:
+            return
+        try:
+            bus.shutdown()
+        finally:
+            self.__bus = None
+
+    def _note_error_frame(self, msg) -> None:
+        now = time.monotonic()
+        count = getattr(self, "_err_print_count", 0) + 1
+        self._err_print_count = count
+        last = getattr(self, "_err_print_at", 0.0)
+        if count > 1 and (now - last) < 0.5:
+            return
+        try:
+            from ..can_iface import describe_socketcan_error
+            decoded = describe_socketcan_error(msg.arbitration_id)
+        except Exception:
+            decoded = str(msg.arbitration_id)
+        extra = f" (x{count})" if count > 1 else ""
+        print(f"{time.time()} <{self.channel}> Error Frame: {decoded}, dlc={msg.dlc}{extra}")
+        self._err_print_at = now
+        self._err_print_count = 0
 
     """
     Receive data.
@@ -223,9 +249,15 @@ class Bus:
                 filter_function: int | None = None,
                 timeout=None
                 ) -> CANFrame | None:
+        deadline = None if timeout is None else (time.monotonic() + timeout)
         while True:
+            remaining = timeout
+            if deadline is not None:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    return None
             try:
-                msg = self.__bus.recv(timeout=timeout)
+                msg = self.__bus.recv(timeout=remaining)
             except can.exceptions.CanOperationError as e:
                 print("<CANReceive> error:", e)
                 return None
@@ -237,7 +269,7 @@ class Bus:
                 return None
 
             if msg.is_error_frame:
-                print(f"{time.time()} <{self.channel}> Error Frame: {msg.arbitration_id}, {msg.dlc}")
+                self._note_error_frame(msg)
                 continue
 
             frame = CANFrame(

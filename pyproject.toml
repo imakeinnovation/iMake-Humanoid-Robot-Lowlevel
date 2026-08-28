@@ -24,11 +24,28 @@ classifiers = [
 ]
 dependencies = [
     "psutil",
+    "numpy",
+    "omegaconf",
+    "PyYAML",
+    "pyserial",
+    "python-can",
+    "cc.udp",
+    "onnxruntime",
+    "inputs",
+    "loop-rate-limiters",
+]
+
+[project.optional-dependencies]
+torch-policy = [
+    "torch",
 ]
 
 [project.urls]
 repository = "https://github.com/imakeinnovation/iMake-Humanoid-Robot-Lowlevel"
 
 [tool.setuptools]
-packages = ["imake_humanoid_robot_lowlevel"]
 zip-safe = false
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["imake_humanoid_robot_lowlevel*"]
