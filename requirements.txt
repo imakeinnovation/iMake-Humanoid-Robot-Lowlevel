@@ -1,7 +1,14 @@
+# Runtime dependencies for the low-level package.
+# Preferred install from this directory:  python -m pip install -e .
+# Keep this list in sync with [project.dependencies] in pyproject.toml.
+psutil
+numpy
+omegaconf
+PyYAML
 pyserial
 python-can
 cc.udp
 onnxruntime
 inputs
-pynput
-tables
+loop-rate-limiters
+# torch is optional: only needed for .pt checkpoints (pip install -e '.[torch-policy]')

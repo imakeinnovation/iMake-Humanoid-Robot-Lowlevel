@@ -1,9 +1,10 @@
 """
-calibrate_joints.py
+test_joystick.py
 
 Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
-Run this script after each power cycle to calibrate the encoder offset of each joint.
+Print live gamepad commands. Useful for checking stick calibration on Linux
+evdev pads before running locomotion.
 """
 
 from imake_humanoid_robot_lowlevel.robot import Humanoid

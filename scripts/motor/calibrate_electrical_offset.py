@@ -1,6 +1,12 @@
 # Copyright (c) 2025, The iMake Humanoid Robot Project Developers.
 
+from pathlib import Path
+import sys
 import time
+
+_ROOT = Path(__file__).resolve().parents[2]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 import imake_humanoid_robot_lowlevel.recoil as recoil
 

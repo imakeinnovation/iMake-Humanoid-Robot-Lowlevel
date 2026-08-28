@@ -13,7 +13,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 from omegaconf import DictConfig, ListConfig
-import torch
 import onnxruntime as ort
 
 
@@ -36,11 +35,15 @@ class TorchPolicy(Policy):
     Loads and executes PyTorch models for robot control policies.
     """
     def __init__(self, checkpoint_path: str, device: str = "cpu"):
+        import torch
+
         self.device = device
-        self.model: torch.nn.Module = torch.load(checkpoint_path, map_location=self.device)
+        self._torch = torch
+        self.model = torch.load(checkpoint_path, map_location=self.device)
         self.model.eval()
 
     def forward(self, observations: np.ndarray) -> np.ndarray:
+        torch = self._torch
         observations_tensor = torch.from_numpy(observations).unsqueeze(0).to(self.device)
         actions_tensor = self.model(observations_tensor)
         return actions_tensor.detach().cpu().squeeze(0).numpy()
