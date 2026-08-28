@@ -5,6 +5,7 @@ robot I/O, gamepad, and policy runner.
 
 Derived from [Berkeley Humanoid Lite](https://github.com/HybridRobotics/berkeley-humanoid-lite).
 
+**Developer report:** [docs/DEVELOPER_REPORT.md](docs/DEVELOPER_REPORT.md).
 **Status snapshot:** [docs/STATUS.md](docs/STATUS.md).
 **Lab bring-up log:** [docs/BRINGUP.md](docs/BRINGUP.md).
 Read those before flashing Recoil or swapping motor wires.
